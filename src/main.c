@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/raylib.h"
-// #include "raylib.h"
+// #include "../include/raylib.h"
+#include "raylib.h"
 
 //-----------------------------------------------------------------------
 // Game Constants
