@@ -1,8 +1,17 @@
-#include <windows.h>
+/*
+---------------------------------------------------------------
+Project Name: TicTacToe
+Dependencies: 0
+Features: multiplayer, networkign
+Author: smpl
+Date: 02-25-2025
+---------------------------------------------------------------
+*/
 
 #include <stdio.h>
+#include <windows.h>
 
-// Window class name and title
+// Game Constants
 #define TTT_WINCLASS_NAME "TicTacToe"
 #define TTT_WINTITLE "TicTacToe"
 #define TRAY_ICON_ID 1
@@ -13,20 +22,6 @@
 // Global variables
 BOOL IsRunning = false;
 NOTIFYICONDATA nid; // Tray icon
-
-// Function to add an icon to the system tray
-void AddTrayIcon(HWND hwnd)
-{
-    nid.cbSize = sizeof(NOTIFYICONDATA);
-    nid.hWnd = hwnd;
-    nid.uID = TRAY_ICON_ID;
-    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-    nid.uCallbackMessage = WM_TRAYICON;
-    nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    lstrcpy(nid.szTip, TEXT("Minimized to Tray"));
-
-    Shell_NotifyIcon(NIM_ADD, &nid);
-}
 
 // Forward declarations
 LRESULT CALLBACK MainWindowCallbackProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -133,7 +128,16 @@ void handle_keyboard_events(HWND Window, UINT Message, WPARAM WParam,
     } break;
     case 'B': {
         ShowWindow(Window, SW_HIDE);
-        AddTrayIcon(Window);
+        // Add Tray Icon
+        nid.cbSize = sizeof(NOTIFYICONDATA);
+        nid.hWnd = Window;
+        nid.uID = TRAY_ICON_ID;
+        nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+        nid.uCallbackMessage = WM_TRAYICON;
+        nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+        lstrcpy(nid.szTip, TEXT("Minimized to Tray"));
+        Shell_NotifyIcon(NIM_ADD, &nid);
+
     } break;
     case 'Q': {
         DestroyWindow(Window);
@@ -143,7 +147,7 @@ void handle_keyboard_events(HWND Window, UINT Message, WPARAM WParam,
 
 void RenderBackBuffer(HWND Window, HDC hdc)
 {
-    // Create a memory DC
+    // Create a Memory Device Context
     HDC memDC = CreateCompatibleDC(hdc);
 
     // Create a bitmap for the back buffer
