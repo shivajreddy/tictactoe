@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <windows.h>
 
 #include <stdio.h>
@@ -6,9 +5,29 @@
 // Window class name and title
 #define TTT_WINCLASS_NAME "TicTacToe"
 #define TTT_WINTITLE "TicTacToe"
+#define TRAY_ICON_ID 1
+#define WM_TRAYICON (WM_USER + 1)
 
 // Global variables
 BOOL IsRunning = false;
+
+HINSTANCE hInstance;
+HWND hwnd;
+NOTIFYICONDATA nid;
+
+// Function to add an icon to the system tray
+void AddTrayIcon(HWND hwnd)
+{
+    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.hWnd = hwnd;
+    nid.uID = TRAY_ICON_ID;
+    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    nid.uCallbackMessage = WM_TRAYICON;
+    nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    lstrcpy(nid.szTip, TEXT("Minimized to Tray"));
+
+    Shell_NotifyIcon(NIM_ADD, &nid);
+}
 
 // Forward declarations
 LRESULT CALLBACK MainWindowCallbackProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -58,6 +77,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE Instance, _In_opt_ HINSTANCE PrevInstance,
     return EXIT_SUCCESS;
 }
 
+void handle_keyboard_events(HWND, UINT, WPARAM, LPARAM);
+
 // Main Window's callback procedure
 LRESULT CALLBACK MainWindowCallbackProcedure(HWND Window, UINT Message,
                                              WPARAM WParam, LPARAM LParam)
@@ -68,8 +89,25 @@ LRESULT CALLBACK MainWindowCallbackProcedure(HWND Window, UINT Message,
         PostQuitMessage(0); // Exit the application
     } break;
 
+    // Handle window-close event
     case WM_CLOSE: {
-        DestroyWindow(Window); // Destroy the window
+        DestroyWindow(Window);              // Destroy the window
+        Shell_NotifyIcon(NIM_DELETE, &nid); // remove tray icon
+    } break;
+
+    // Handle keyboard events
+    case WM_KEYDOWN: {
+        handle_keyboard_events(Window, Message, WParam, LParam);
+    } break;
+
+    // Handle tray icon events
+    case WM_TRAYICON: {
+        // Tray icon is clicked
+        if (LParam == WM_LBUTTONDOWN || LParam == WM_RBUTTONDOWN) {
+            ShowWindow(Window, SW_SHOW);
+            ShowWindow(Window, SW_RESTORE);
+            Shell_NotifyIcon(NIM_DELETE, &nid); // remove tray icon
+        }
     } break;
 
     default: {
@@ -78,4 +116,22 @@ LRESULT CALLBACK MainWindowCallbackProcedure(HWND Window, UINT Message,
     } break;
     }
     return 0;
+}
+
+void handle_keyboard_events(HWND Window, UINT Message, WPARAM WParam,
+                            LPARAM LParam)
+{
+
+    switch (WParam) {
+    case VK_ESCAPE: {
+        OutputDebugString("Escape Pressed\n");
+    } break;
+    case 'B': {
+        ShowWindow(Window, SW_HIDE);
+        AddTrayIcon(Window);
+    } break;
+    case 'Q': {
+        DestroyWindow(Window);
+    } break;
+    }
 }
